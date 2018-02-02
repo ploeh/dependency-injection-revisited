@@ -20,20 +20,17 @@ namespace Ploeh.Samples.BookingApi
 
         public int? TryAccept(Reservation reservation)
         {
-            if (ReservationsRepository.IsReservationInFuture(reservation))
-            {
-                var reservedSeats =
-                    ReservationsRepository
-                        .ReadReservations(reservation.Date)
-                        .Sum(r => r.Quantity);
-                if (reservedSeats + reservation.Quantity <= Capacity)
-                {
-                    reservation.IsAccepted = true;
-                    return ReservationsRepository.Create(reservation);
-                }
-            }
+            if (!ReservationsRepository.IsReservationInFuture(reservation))
+                return null;
 
-            return null;
+            var reservedSeats = ReservationsRepository
+                .ReadReservations(reservation.Date)
+                .Sum(r => r.Quantity);
+            if (Capacity < reservedSeats + reservation.Quantity)
+                return null;
+
+            reservation.IsAccepted = true;
+            return ReservationsRepository.Create(reservation);
         }
 
         public MaîtreD WithCapacity(int newCapacity)
