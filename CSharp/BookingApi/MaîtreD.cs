@@ -8,9 +8,25 @@ namespace Ploeh.Samples.BookingApi
 {
     public class MaîtreD : IMaîtreD
     {
+        public MaîtreD(int capacity, IReservationsRepository reservationsRepository)
+        {
+            Capacity = capacity;
+            ReservationsRepository = reservationsRepository;
+        }
+
+        public int Capacity { get; }
+
+        public IReservationsRepository ReservationsRepository { get; }
+
         public int? TryAccept(Reservation reservation)
         {
-            throw new NotImplementedException();
+            reservation.IsAccepted = true;
+            return ReservationsRepository.Create(reservation);
+        }
+
+        public MaîtreD WithCapacity(int newCapacity)
+        {
+            return new MaîtreD(newCapacity, ReservationsRepository);
         }
     }
 }

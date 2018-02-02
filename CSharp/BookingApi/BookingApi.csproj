@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IMaîtreD.cs" />
+    <Compile Include="IReservationsRepository.cs" />
     <Compile Include="MaîtreD.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reservation.cs" />
