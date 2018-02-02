@@ -20,8 +20,13 @@ namespace Ploeh.Samples.BookingApi
 
         public int? TryAccept(Reservation reservation)
         {
-            reservation.IsAccepted = true;
-            return ReservationsRepository.Create(reservation);
+            if (ReservationsRepository.IsReservationInFuture(reservation))
+            {
+                reservation.IsAccepted = true;
+                return ReservationsRepository.Create(reservation);
+            }
+
+            return null;
         }
 
         public MaîtreD WithCapacity(int newCapacity)

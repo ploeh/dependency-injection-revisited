@@ -35,5 +35,20 @@ namespace Ploeh.Samples.BookingApi.UnitTests
             Assert.Equal(expected, actual);
             Assert.True(reservation.IsAccepted);
         }
+
+        [Theory, BookingApiTestConventions]
+        public void TryAcceptReturnsNullOnReservationInThePast(
+            [Frozen]Mock<IReservationsRepository> td,
+            Reservation reservation,
+            MaîtreD sut)
+        {
+            td.Setup(r => r.IsReservationInFuture(reservation)).Returns(false);
+            reservation.IsAccepted = false;
+
+            var actual = sut.TryAccept(reservation);
+
+            Assert.Null(actual);
+            Assert.False(reservation.IsAccepted);
+        }
     }
 }
