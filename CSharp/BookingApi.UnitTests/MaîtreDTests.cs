@@ -13,18 +13,12 @@ namespace Ploeh.Samples.BookingApi.UnitTests
     {
         [Theory, BookingApiTestConventions]
         public void TryAcceptReturnsReservationIdInHappyPathScenario(
-            [Frozen]Mock<IReservationsRepository> td,
             Reservation reservation,
             IReadOnlyCollection<Reservation> reservations,
             MaîtreD sut,
             int excessCapacity,
             int expected)
         {
-            td.Setup(r => r.IsReservationInFuture(reservation)).Returns(true);
-            td
-                .Setup(r => r.ReadReservations(reservation.Date))
-                .Returns(reservations);
-            td.Setup(r => r.Create(reservation)).Returns(expected);
             var reservedSeats = reservations.Sum(r => r.Quantity);
             reservation.IsAccepted = false;
             sut = sut.WithCapacity(
@@ -32,43 +26,41 @@ namespace Ploeh.Samples.BookingApi.UnitTests
 
             var actual = sut.TryAccept(reservation);
 
-            Assert.Equal(expected, actual);
+            Assert.Equal(
+                expected,
+                actual.Interpret(true, reservations, expected));
             Assert.True(reservation.IsAccepted);
         }
 
         [Theory, BookingApiTestConventions]
         public void TryAcceptReturnsNullOnReservationInThePast(
-            [Frozen]Mock<IReservationsRepository> td,
             Reservation reservation,
+            IReadOnlyCollection<Reservation> reservations,
+            int id,
             MaîtreD sut)
         {
-            td.Setup(r => r.IsReservationInFuture(reservation)).Returns(false);
             reservation.IsAccepted = false;
 
             var actual = sut.TryAccept(reservation);
 
-            Assert.Null(actual);
+            Assert.Null(actual.Interpret(false, reservations, id));
             Assert.False(reservation.IsAccepted);
         }
 
         [Theory, BookingApiTestConventions]
         public void TryAcceptReturnsNullOnInsufficientCapacity(
-            [Frozen]Mock<IReservationsRepository> td,
             Reservation reservation,
             IReadOnlyCollection<Reservation> reservations,
+            int id,
             MaîtreD sut)
         {
-            td.Setup(r => r.IsReservationInFuture(reservation)).Returns(true);
-            td
-                .Setup(r => r.ReadReservations(reservation.Date))
-                .Returns(reservations);
-            var reservedSeats = reservations.Sum(r => r.Quantity);
             reservation.IsAccepted = false;
+            var reservedSeats = reservations.Sum(r => r.Quantity);
             sut = sut.WithCapacity(reservedSeats + reservation.Quantity - 1);
 
             var actual = sut.TryAccept(reservation);
 
-            Assert.Null(actual);
+            Assert.Null(actual.Interpret(true, reservations, id));
             Assert.False(reservation.IsAccepted);
         }
     }

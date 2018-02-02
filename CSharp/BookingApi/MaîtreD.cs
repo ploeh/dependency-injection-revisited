@@ -8,34 +8,41 @@ namespace Ploeh.Samples.BookingApi
 {
     public class MaîtreD : IMaîtreD
     {
-        public MaîtreD(int capacity, IReservationsRepository reservationsRepository)
+        public MaîtreD(int capacity)
         {
             Capacity = capacity;
-            ReservationsRepository = reservationsRepository;
         }
 
         public int Capacity { get; }
 
-        public IReservationsRepository ReservationsRepository { get; }
-
-        public int? TryAccept(Reservation reservation)
+        public IReservationsProgram<int?> TryAccept(Reservation reservation)
         {
-            if (!ReservationsRepository.IsReservationInFuture(reservation))
-                return null;
+            return ReservationsProgram
+                .IsReservationInFuture(reservation)
+                .SelectMany(isInFuture =>
+                {
+                    if (!isInFuture)
+                        return new Pure<int?>(null);
 
-            var reservedSeats = ReservationsRepository
-                .ReadReservations(reservation.Date)
-                .Sum(r => r.Quantity);
-            if (Capacity < reservedSeats + reservation.Quantity)
-                return null;
+                    return ReservationsProgram
+                        .ReadReservations(reservation.Date)
+                        .SelectMany(reservations =>
+                        {
+                            var reservedSeats = reservations.Sum(r => r.Quantity);
+                            if (Capacity < reservedSeats + reservation.Quantity)
+                                return new Pure<int?>(null);
 
-            reservation.IsAccepted = true;
-            return ReservationsRepository.Create(reservation);
+                            reservation.IsAccepted = true;
+                            return ReservationsProgram
+                                .Create(reservation)
+                                .Select(x => new int?(x));
+                        });
+                });
         }
 
         public MaîtreD WithCapacity(int newCapacity)
         {
-            return new MaîtreD(newCapacity, ReservationsRepository);
+            return new MaîtreD(newCapacity);
         }
     }
 }

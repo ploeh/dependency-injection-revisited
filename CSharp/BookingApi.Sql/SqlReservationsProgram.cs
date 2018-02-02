@@ -7,35 +7,49 @@ using System.Threading.Tasks;
 
 namespace Ploeh.Samples.BookingApi.Sql
 {
-    public class SqlReservationsRepository : IReservationsRepository
+    public static class SqlReservationsProgram
     {
-        public SqlReservationsRepository(string connectionString)
+        public static T Interpret<T>(
+            this IReservationsProgram<T> program,
+            string connectionString)
         {
-            this.ConnectionString = connectionString;
+            return program.Match(
+                pure: x => x,
+                free: i => i.Match(
+                    isReservationInFuture: t =>
+                        t.Item2(IsReservationInFuture(t.Item1))
+                            .Interpret(connectionString),
+                    readReservations: t =>
+                        t.Item2(ReadReservations(t.Item1, connectionString))
+                            .Interpret(connectionString),
+                    create: t =>
+                        t.Item2(Create(t.Item1, connectionString))
+                            .Interpret(connectionString)));
         }
 
-        public string ConnectionString { get; }
-
-        public bool IsReservationInFuture(Reservation reservation)
+        public static bool IsReservationInFuture(Reservation reservation)
         {
             return DateTimeOffset.Now < reservation.Date;
         }
 
-        public IReadOnlyCollection<Reservation> ReadReservations(
-            DateTimeOffset date)
+        public static IReadOnlyCollection<Reservation> ReadReservations(
+            DateTimeOffset date,
+            string connectionString)
         {
-            return this.ReadReservations(
+            return ReadReservations(
                 date.Date,
-                date.Date.AddDays(1).AddTicks(-1));
+                date.Date.AddDays(1).AddTicks(-1),
+                connectionString);
         }
 
-        private IReadOnlyCollection<Reservation> ReadReservations(
+        private static IReadOnlyCollection<Reservation> ReadReservations(
             DateTimeOffset min,
-            DateTimeOffset max)
+            DateTimeOffset max,
+            string connectionString)
         {
             var result = new List<Reservation>();
 
-            using (var conn = new SqlConnection(this.ConnectionString))
+            using (var conn = new SqlConnection(connectionString))
             using (var cmd = new SqlCommand(readByRangeSql, conn))
             {
                 cmd.Parameters.Add(new SqlParameter("@MinDate", min));
@@ -69,9 +83,9 @@ namespace Ploeh.Samples.BookingApi.Sql
             AND MONTH([Date]) <= MONTH(@MaxDate)
             AND DAY([Date]) <= DAY(@MaxDate)";
 
-        public int Create(Reservation reservation)
+        private static int Create(Reservation reservation, string connectionString)
         {
-            using (var conn = new SqlConnection(ConnectionString))
+            using (var conn = new SqlConnection(connectionString))
             using (var cmd = new SqlCommand(createReservationSql, conn))
             {
                 cmd.Parameters.Add(

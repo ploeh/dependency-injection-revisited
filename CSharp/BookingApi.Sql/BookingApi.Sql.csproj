@@ -41,7 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SqlReservationsRepository.cs" />
+    <Compile Include="SqlReservationsProgram.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BookingApi\BookingApi.csproj">

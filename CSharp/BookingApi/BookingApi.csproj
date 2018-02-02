@@ -40,11 +40,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Free.cs" />
+    <Compile Include="Pure.cs" />
+    <Compile Include="ReservationsInstruction.cs" />
+    <Compile Include="Create.cs" />
+    <Compile Include="IReservationsInstruction.cs" />
     <Compile Include="IMaîtreD.cs" />
-    <Compile Include="IReservationsRepository.cs" />
+    <Compile Include="IReservationsProgram.cs" />
+    <Compile Include="IsReservationInFuture.cs" />
     <Compile Include="MaîtreD.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReadReservations.cs" />
     <Compile Include="Reservation.cs" />
+    <Compile Include="ReservationsProgram.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

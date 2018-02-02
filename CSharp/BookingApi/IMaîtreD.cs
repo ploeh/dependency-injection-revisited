@@ -8,6 +8,6 @@ namespace Ploeh.Samples.BookingApi
 {
     public interface IMaîtreD
     {
-        int? TryAccept(Reservation reservation);
+        IReservationsProgram<int?> TryAccept(Reservation reservation);
     }
 }
