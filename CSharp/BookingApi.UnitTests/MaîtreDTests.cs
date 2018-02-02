@@ -50,5 +50,26 @@ namespace Ploeh.Samples.BookingApi.UnitTests
             Assert.Null(actual);
             Assert.False(reservation.IsAccepted);
         }
+
+        [Theory, BookingApiTestConventions]
+        public void TryAcceptReturnsNullOnInsufficientCapacity(
+            [Frozen]Mock<IReservationsRepository> td,
+            Reservation reservation,
+            IReadOnlyCollection<Reservation> reservations,
+            MaîtreD sut)
+        {
+            td.Setup(r => r.IsReservationInFuture(reservation)).Returns(true);
+            td
+                .Setup(r => r.ReadReservations(reservation.Date))
+                .Returns(reservations);
+            var reservedSeats = reservations.Sum(r => r.Quantity);
+            reservation.IsAccepted = false;
+            sut = sut.WithCapacity(reservedSeats + reservation.Quantity - 1);
+
+            var actual = sut.TryAccept(reservation);
+
+            Assert.Null(actual);
+            Assert.False(reservation.IsAccepted);
+        }
     }
 }

@@ -22,8 +22,15 @@ namespace Ploeh.Samples.BookingApi
         {
             if (ReservationsRepository.IsReservationInFuture(reservation))
             {
-                reservation.IsAccepted = true;
-                return ReservationsRepository.Create(reservation);
+                var reservedSeats =
+                    ReservationsRepository
+                        .ReadReservations(reservation.Date)
+                        .Sum(r => r.Quantity);
+                if (reservedSeats + reservation.Quantity <= Capacity)
+                {
+                    reservation.IsAccepted = true;
+                    return ReservationsRepository.Create(reservation);
+                }
             }
 
             return null;
