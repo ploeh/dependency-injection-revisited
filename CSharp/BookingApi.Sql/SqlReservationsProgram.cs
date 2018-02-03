@@ -14,14 +14,12 @@ namespace Ploeh.Samples.BookingApi.Sql
             string connectionString)
         {
             return program.Match(
-                new ReservationsProgramParameters<T, T>(
-                    pure: x => x,
-                    free: i => i.Accept(
-                        new InterpretReservationsInstructionParameters<T>(
-                            connectionString))));
+                new InterpretReservationsInstructionParameters<T>(
+                    connectionString));
         }
 
         private class InterpretReservationsInstructionParameters<T> :
+            IReservationsProgramParameters<T, T>,
             IReservationsInstructionVisitor<IReservationsProgram<T>, T>
         {
             private readonly string connectionString;
@@ -32,10 +30,20 @@ namespace Ploeh.Samples.BookingApi.Sql
                 this.connectionString = connectionString;
             }
 
+            public T Pure(T x)
+            {
+                return x;
+            }
+
+            public T Free(IReservationsInstruction<IReservationsProgram<T>> i)
+            {
+                return i.Accept(this);
+            }
+
             public T VisitIsReservationInFuture(Tuple<Reservation, Func<bool, IReservationsProgram<T>>> t)
             {
                 var isInFuture = DateTimeOffset.Now < t.Item1.Date;
-                return t.Item2(isInFuture).Interpret(connectionString);
+                return t.Item2(isInFuture).Match(this);
             }
 
             public T VisitReadReservations(Tuple<DateTimeOffset, Func<IReadOnlyCollection<Reservation>, IReservationsProgram<T>>> t)
@@ -43,7 +51,7 @@ namespace Ploeh.Samples.BookingApi.Sql
                 var reservations = ReadReservations(
                     t.Item1.Date,
                     t.Item1.Date.AddDays(1).AddTicks(-1));
-                return t.Item2(reservations).Interpret(connectionString);
+                return t.Item2(reservations).Match(this);
             }
 
             private IReadOnlyCollection<Reservation> ReadReservations(
@@ -89,7 +97,7 @@ namespace Ploeh.Samples.BookingApi.Sql
             public T VisitCreate(
                 Tuple<Reservation, Func<int, IReservationsProgram<T>>> t)
             {
-                return t.Item2(Create(t.Item1)).Interpret(connectionString);
+                return t.Item2(Create(t.Item1)).Match(this);
             }
 
             private int Create(Reservation reservation)

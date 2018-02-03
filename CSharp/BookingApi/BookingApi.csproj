@@ -54,7 +54,7 @@
     <Compile Include="Reservation.cs" />
     <Compile Include="IReservationsInstructionVisitor.cs" />
     <Compile Include="ReservationsProgram.cs" />
-    <Compile Include="ReservationsProgramParameters.cs" />
+    <Compile Include="IReservationsProgramParameters.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

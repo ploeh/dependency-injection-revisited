@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Ploeh.Samples.BookingApi
 {
-    public interface IReservationsProgram<T>
+    public interface IReservationsProgramParameters<T, TResult>
     {
-        TResult Match<TResult>(
-            IReservationsProgramParameters<T, TResult> parameters);
+        TResult Free(IReservationsInstruction<IReservationsProgram<T>> i);
+        TResult Pure(T x);
     }
 }

@@ -15,7 +15,7 @@ namespace Ploeh.Samples.BookingApi
             this.x = x;
         }
 
-        public TResult Match<TResult>(ReservationsProgramParameters<T, TResult> parameters)
+        public TResult Match<TResult>(IReservationsProgramParameters<T, TResult> parameters)
         {
             return parameters.Pure(this.x);
         }

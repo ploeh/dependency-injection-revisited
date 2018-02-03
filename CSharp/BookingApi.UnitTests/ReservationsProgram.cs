@@ -15,13 +15,33 @@ namespace Ploeh.Samples.BookingApi.UnitTests
             int id)
         {
             return program.Match(
-                new ReservationsProgramParameters<T, T>(
-                    pure: x => x,
-                    free: i => i.Accept(
-                        new InterpretReservationsInstructionVisitor<T>(
-                            isInFuture,
-                            reservations,
-                            id))));
+                new InterpretReservationsProgramParameters<T>(
+                    new InterpretReservationsInstructionVisitor<T>(
+                        isInFuture,
+                        reservations,
+                        id)));
+        }
+
+        private class InterpretReservationsProgramParameters<T> :
+            IReservationsProgramParameters<T, T>
+        {
+            private readonly IReservationsInstructionVisitor<IReservationsProgram<T>, T> instructionsVisitor;
+
+            public InterpretReservationsProgramParameters(
+                IReservationsInstructionVisitor<IReservationsProgram<T>, T> instructionsVisitor)
+            {
+                this.instructionsVisitor = instructionsVisitor;
+            }
+
+            public T Pure(T x)
+            {
+                return x;
+            }
+
+            public T Free(IReservationsInstruction<IReservationsProgram<T>> i)
+            {
+                return i.Accept(this.instructionsVisitor);
+            }
         }
 
         private class InterpretReservationsInstructionVisitor<T> :
