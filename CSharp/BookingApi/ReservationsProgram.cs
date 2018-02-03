@@ -21,29 +21,29 @@ namespace Ploeh.Samples.BookingApi
             this IReservationsProgram<T> source,
             Func<T, IReservationsProgram<TResult>> selector)
         {
-            return source.Match(
-                new SelectManyReservationsProgramParameters<T, TResult>(
+            return source.Accept(
+                new SelectManyReservationsProgramVisitor<T, TResult>(
                     selector));
         }
 
-        private class SelectManyReservationsProgramParameters<T, TResult> :
-            IReservationsProgramParameters<T, IReservationsProgram<TResult>>
+        private class SelectManyReservationsProgramVisitor<T, TResult> :
+            IReservationsProgramVisitor<T, IReservationsProgram<TResult>>
         {
             private readonly Func<T, IReservationsProgram<TResult>> selector;
 
-            public SelectManyReservationsProgramParameters(
+            public SelectManyReservationsProgramVisitor(
                 Func<T, IReservationsProgram<TResult>> selector)
             {
                 this.selector = selector;
             }
 
-            public IReservationsProgram<TResult> Free(
+            public IReservationsProgram<TResult> VisitFree(
                 IReservationsInstruction<IReservationsProgram<T>> i)
             {
                 return new Free<TResult>(i.Select(p => p.SelectMany(selector)));
             }
 
-            public IReservationsProgram<TResult> Pure(T x)
+            public IReservationsProgram<TResult> VisitPure(T x)
             {
                 return selector(x);
             }

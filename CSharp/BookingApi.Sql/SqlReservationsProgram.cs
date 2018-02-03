@@ -13,29 +13,29 @@ namespace Ploeh.Samples.BookingApi.Sql
             this IReservationsProgram<T> program,
             string connectionString)
         {
-            return program.Match(
-                new InterpretReservationsInstructionParameters<T>(
+            return program.Accept(
+                new InterpretReservationsVisitor<T>(
                     connectionString));
         }
 
-        private class InterpretReservationsInstructionParameters<T> :
-            IReservationsProgramParameters<T, T>,
+        private class InterpretReservationsVisitor<T> :
+            IReservationsProgramVisitor<T, T>,
             IReservationsInstructionVisitor<IReservationsProgram<T>, T>
         {
             private readonly string connectionString;
 
-            public InterpretReservationsInstructionParameters(
+            public InterpretReservationsVisitor(
                 string connectionString)
             {
                 this.connectionString = connectionString;
             }
 
-            public T Pure(T x)
+            public T VisitPure(T x)
             {
                 return x;
             }
 
-            public T Free(IReservationsInstruction<IReservationsProgram<T>> i)
+            public T VisitFree(IReservationsInstruction<IReservationsProgram<T>> i)
             {
                 return i.Accept(this);
             }
@@ -43,7 +43,7 @@ namespace Ploeh.Samples.BookingApi.Sql
             public T VisitIsReservationInFuture(Tuple<Reservation, Func<bool, IReservationsProgram<T>>> t)
             {
                 var isInFuture = DateTimeOffset.Now < t.Item1.Date;
-                return t.Item2(isInFuture).Match(this);
+                return t.Item2(isInFuture).Accept(this);
             }
 
             public T VisitReadReservations(Tuple<DateTimeOffset, Func<IReadOnlyCollection<Reservation>, IReservationsProgram<T>>> t)
@@ -51,7 +51,7 @@ namespace Ploeh.Samples.BookingApi.Sql
                 var reservations = ReadReservations(
                     t.Item1.Date,
                     t.Item1.Date.AddDays(1).AddTicks(-1));
-                return t.Item2(reservations).Match(this);
+                return t.Item2(reservations).Accept(this);
             }
 
             private IReadOnlyCollection<Reservation> ReadReservations(
@@ -97,7 +97,7 @@ namespace Ploeh.Samples.BookingApi.Sql
             public T VisitCreate(
                 Tuple<Reservation, Func<int, IReservationsProgram<T>>> t)
             {
-                return t.Item2(Create(t.Item1)).Match(this);
+                return t.Item2(Create(t.Item1)).Accept(this);
             }
 
             private int Create(Reservation reservation)
