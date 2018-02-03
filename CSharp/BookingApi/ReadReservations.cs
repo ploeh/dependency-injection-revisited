@@ -8,17 +8,21 @@ namespace Ploeh.Samples.BookingApi
 {
     public class ReadReservations<T> : IReservationsInstruction<T>
     {
-        private readonly Tuple<DateTimeOffset, Func<IReadOnlyCollection<Reservation>, T>> t;
+        private readonly DateTimeOffset date;
+        private readonly Func<IReadOnlyCollection<Reservation>, T> continuation;
 
-        public ReadReservations(Tuple<DateTimeOffset, Func<IReadOnlyCollection<Reservation>, T>> t)
+        public ReadReservations(
+            DateTimeOffset date,
+            Func<IReadOnlyCollection<Reservation>, T> continuation)
         {
-            this.t = t;
+            this.date = date;
+            this.continuation = continuation;
         }
 
         public TResult Accept<TResult>(
             IReservationsInstructionVisitor<T, TResult> visitor)
         {
-            return visitor.VisitReadReservations(this.t);
+            return visitor.VisitReadReservations(date, continuation);
         }
     }
 }

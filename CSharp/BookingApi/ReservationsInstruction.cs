@@ -28,25 +28,31 @@ namespace Ploeh.Samples.BookingApi
                 this.selector = selector;
             }
 
-            public IReservationsInstruction<TResult> VisitIsReservationInFuture(Tuple<Reservation, Func<bool, T>> t)
+            public IReservationsInstruction<TResult> VisitIsReservationInFuture(
+                Reservation reservation,
+                Func<bool, T> continuation)
             {
-                return new IsReservationInFuture<TResult>(new Tuple<Reservation, Func<bool, TResult>>(
-                    t.Item1,
-                    b => selector(t.Item2(b))));
+                return new IsReservationInFuture<TResult>(
+                    reservation,
+                    b => selector(continuation(b)));
             }
 
-            public IReservationsInstruction<TResult> VisitReadReservations(Tuple<DateTimeOffset, Func<IReadOnlyCollection<Reservation>, T>> t)
+            public IReservationsInstruction<TResult> VisitReadReservations(
+                DateTimeOffset date,
+                Func<IReadOnlyCollection<Reservation>, T> continuation)
             {
-                return new ReadReservations<TResult>(new Tuple<DateTimeOffset, Func<IReadOnlyCollection<Reservation>, TResult>>(
-                    t.Item1,
-                    d => selector(t.Item2(d))));
+                return new ReadReservations<TResult>(
+                    date,
+                    d => selector(continuation(d)));
             }
 
-            public IReservationsInstruction<TResult> VisitCreate(Tuple<Reservation, Func<int, T>> t)
+            public IReservationsInstruction<TResult> VisitCreate(
+                Reservation reservation,
+                Func<int, T> continuation)
             {
-                return new Create<TResult>(new Tuple<Reservation, Func<int, TResult>>(
-                    t.Item1,
-                    r => selector(t.Item2(r))));
+                return new Create<TResult>(
+                    reservation,
+                    r => selector(continuation(r)));
             }
         }
     }

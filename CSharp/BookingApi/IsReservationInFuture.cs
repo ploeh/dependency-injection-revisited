@@ -8,17 +8,22 @@ namespace Ploeh.Samples.BookingApi
 {
     public class IsReservationInFuture<T> : IReservationsInstruction<T>
     {
-        private readonly Tuple<Reservation, Func<bool, T>> t;
+        private readonly Reservation reservation;
+        private readonly Func<bool, T> continuation;
 
-        public IsReservationInFuture(Tuple<Reservation, Func<bool, T>> t)
+        public IsReservationInFuture(
+            Reservation reservation,
+            Func<bool, T> continuation)
         {
-            this.t = t;
+            this.reservation = reservation;
+            this.continuation = continuation;
         }
 
         public TResult Accept<TResult>(
             IReservationsInstructionVisitor<T, TResult> visitor)
         {
-            return visitor.VisitIsReservationInFuture(this.t);
+            return
+                visitor.VisitIsReservationInFuture(reservation, continuation);
         }
     }
 }

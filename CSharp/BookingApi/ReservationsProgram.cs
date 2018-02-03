@@ -64,9 +64,8 @@ namespace Ploeh.Samples.BookingApi
         {
             return new Free<bool>(
                 new IsReservationInFuture<IReservationsProgram<bool>>(
-                    new Tuple<Reservation, Func<bool, IReservationsProgram<bool>>>(
-                        reservation,
-                        x => new Pure<bool>(x))));
+                    reservation,
+                    x => new Pure<bool>(x)));
         }
 
         public static IReservationsProgram<IReadOnlyCollection<Reservation>> ReadReservations(
@@ -74,18 +73,16 @@ namespace Ploeh.Samples.BookingApi
         {
             return new Free<IReadOnlyCollection<Reservation>>(
                 new ReadReservations<IReservationsProgram<IReadOnlyCollection<Reservation>>>(
-                    new Tuple<DateTimeOffset, Func<IReadOnlyCollection<Reservation>, IReservationsProgram<IReadOnlyCollection<Reservation>>>>(
-                        date,
-                        x => new Pure<IReadOnlyCollection<Reservation>>(x))));
+                    date,
+                    x => new Pure<IReadOnlyCollection<Reservation>>(x)));
         }
 
         public static IReservationsProgram<int> Create(Reservation reservation)
         {
             return new Free<int>(
                 new Create<IReservationsProgram<int>>(
-                    new Tuple<Reservation, Func<int, IReservationsProgram<int>>>(
-                        reservation,
-                        x => new Pure<int>(x))));
+                    reservation,
+                    x => new Pure<int>(x)));
         }
     }
 }

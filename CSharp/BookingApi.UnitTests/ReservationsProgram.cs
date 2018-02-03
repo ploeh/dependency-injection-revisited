@@ -61,21 +61,28 @@ namespace Ploeh.Samples.BookingApi.UnitTests
                 this.id = id;
             }
 
-            public T VisitIsReservationInFuture(Tuple<Reservation, Func<bool, IReservationsProgram<T>>> t)
+            public T VisitIsReservationInFuture(
+                Reservation reservation,
+                Func<bool, IReservationsProgram<T>> continuation)
             {
-                return t.Item2(isInFuture)
+                return continuation(isInFuture)
                     .Interpret(isInFuture, reservations, id);
             }
 
-            public T VisitReadReservations(Tuple<DateTimeOffset, Func<IReadOnlyCollection<Reservation>, IReservationsProgram<T>>> t)
+            public T VisitReadReservations(
+                DateTimeOffset date,
+                Func<IReadOnlyCollection<Reservation>, IReservationsProgram<T>> continuation)
             {
-                return t.Item2(reservations)
+                return continuation(reservations)
                     .Interpret(isInFuture, reservations, id);
             }
 
-            public T VisitCreate(Tuple<Reservation, Func<int, IReservationsProgram<T>>> t)
+            public T VisitCreate(
+                Reservation  reservation,
+                Func<int, IReservationsProgram<T>> continuation)
             {
-                return t.Item2(id).Interpret(isInFuture, reservations, id);
+                return continuation(id)
+                    .Interpret(isInFuture, reservations, id);
             }
         }
     }

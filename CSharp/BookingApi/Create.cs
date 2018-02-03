@@ -8,17 +8,21 @@ namespace Ploeh.Samples.BookingApi
 {
     public class Create<T> : IReservationsInstruction<T>
     {
-        private readonly Tuple<Reservation, Func<int, T>> t;
+        private readonly Reservation reservation;
+        private readonly Func<int, T> continuation;
 
-        public Create(Tuple<Reservation, Func<int, T>> t)
+        public Create(
+            Reservation reservation,
+            Func<int, T> continuation)
         {
-            this.t = t;
+            this.reservation = reservation;
+            this.continuation = continuation;
         }
 
         public TResult Accept<TResult>(
             IReservationsInstructionVisitor<T, TResult> visitor)
         {
-            return visitor.VisitCreate(this.t);
+            return visitor.VisitCreate(reservation, continuation);
         }
     }
 }

@@ -40,18 +40,22 @@ namespace Ploeh.Samples.BookingApi.Sql
                 return i.Accept(this);
             }
 
-            public T VisitIsReservationInFuture(Tuple<Reservation, Func<bool, IReservationsProgram<T>>> t)
+            public T VisitIsReservationInFuture(
+                Reservation reservation,
+                Func<bool, IReservationsProgram<T>> continuation)
             {
-                var isInFuture = DateTimeOffset.Now < t.Item1.Date;
-                return t.Item2(isInFuture).Accept(this);
+                var isInFuture = DateTimeOffset.Now < reservation.Date;
+                return continuation(isInFuture).Accept(this);
             }
 
-            public T VisitReadReservations(Tuple<DateTimeOffset, Func<IReadOnlyCollection<Reservation>, IReservationsProgram<T>>> t)
+            public T VisitReadReservations(
+                DateTimeOffset date,
+                Func<IReadOnlyCollection<Reservation>, IReservationsProgram<T>> continuation)
             {
                 var reservations = ReadReservations(
-                    t.Item1.Date,
-                    t.Item1.Date.AddDays(1).AddTicks(-1));
-                return t.Item2(reservations).Accept(this);
+                    date.Date,
+                    date.Date.AddDays(1).AddTicks(-1));
+                return continuation(reservations).Accept(this);
             }
 
             private IReadOnlyCollection<Reservation> ReadReservations(
@@ -95,9 +99,10 @@ namespace Ploeh.Samples.BookingApi.Sql
                 AND DAY([Date]) <= DAY(@MaxDate)";
 
             public T VisitCreate(
-                Tuple<Reservation, Func<int, IReservationsProgram<T>>> t)
+                Reservation reservation,
+                Func<int, IReservationsProgram<T>> continuation)
             {
-                return t.Item2(Create(t.Item1)).Accept(this);
+                return continuation(Create(reservation)).Accept(this);
             }
 
             private int Create(Reservation reservation)

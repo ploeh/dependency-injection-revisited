@@ -8,8 +8,14 @@ namespace Ploeh.Samples.BookingApi
 {
     public interface IReservationsInstructionVisitor<T, TResult>
     {
-        TResult VisitIsReservationInFuture(Tuple<Reservation, Func<bool, T>> t);
-        TResult VisitReadReservations(Tuple<DateTimeOffset, Func<IReadOnlyCollection<Reservation>, T>> t);
-        TResult VisitCreate(Tuple<Reservation, Func<int, T>> t);
+        TResult VisitIsReservationInFuture(
+            Reservation reservation,
+            Func<bool, T> continuation);
+        TResult VisitReadReservations(
+            DateTimeOffset date,
+            Func<IReadOnlyCollection<Reservation>, T> continuation);
+        TResult VisitCreate(
+            Reservation reservation,
+            Func<int, T> continuation);
     }
 }
