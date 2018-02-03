@@ -9,6 +9,6 @@ namespace Ploeh.Samples.BookingApi
     public interface IReservationsInstruction<T>
     {
         TResult Match<TResult>(
-            ReservationsInstructionParameters<T, TResult> parameters);
+            IReservationsInstructionParameters<T, TResult> parameters);
     }
 }

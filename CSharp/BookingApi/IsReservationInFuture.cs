@@ -16,7 +16,7 @@ namespace Ploeh.Samples.BookingApi
         }
 
         public TResult Match<TResult>(
-            ReservationsInstructionParameters<T, TResult> parameters)
+            IReservationsInstructionParameters<T, TResult> parameters)
         {
             return parameters.IsReservationInFuture(this.t);
         }

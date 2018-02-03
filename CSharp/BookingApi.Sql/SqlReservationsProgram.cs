@@ -16,95 +16,103 @@ namespace Ploeh.Samples.BookingApi.Sql
             return program.Match(
                 pure: x => x,
                 free: i => i.Match(
-                    new ReservationsInstructionParameters<IReservationsProgram<T>, T>(
-                        isReservationInFuture: t =>
-                            t.Item2(IsReservationInFuture(t.Item1))
-                                .Interpret(connectionString),
-                        readReservations: t =>
-                            t.Item2(ReadReservations(t.Item1, connectionString))
-                                .Interpret(connectionString),
-                        create: t =>
-                            t.Item2(Create(t.Item1, connectionString))
-                                .Interpret(connectionString))));
+                    new InterpretReservationsInstructionParameters<T>(
+                        connectionString)));
         }
 
-        public static bool IsReservationInFuture(Reservation reservation)
+        private class InterpretReservationsInstructionParameters<T> :
+            IReservationsInstructionParameters<IReservationsProgram<T>, T>
         {
-            return DateTimeOffset.Now < reservation.Date;
-        }
+            private readonly string connectionString;
 
-        public static IReadOnlyCollection<Reservation> ReadReservations(
-            DateTimeOffset date,
-            string connectionString)
-        {
-            return ReadReservations(
-                date.Date,
-                date.Date.AddDays(1).AddTicks(-1),
-                connectionString);
-        }
-
-        private static IReadOnlyCollection<Reservation> ReadReservations(
-            DateTimeOffset min,
-            DateTimeOffset max,
-            string connectionString)
-        {
-            var result = new List<Reservation>();
-
-            using (var conn = new SqlConnection(connectionString))
-            using (var cmd = new SqlCommand(readByRangeSql, conn))
+            public InterpretReservationsInstructionParameters(
+                string connectionString)
             {
-                cmd.Parameters.Add(new SqlParameter("@MinDate", min));
-                cmd.Parameters.Add(new SqlParameter("@MaxDate", max));
+                this.connectionString = connectionString;
+            }
 
-                conn.Open();
-                using (var rdr = cmd.ExecuteReader())
+            public T IsReservationInFuture(Tuple<Reservation, Func<bool, IReservationsProgram<T>>> t)
+            {
+                var isInFuture = DateTimeOffset.Now < t.Item1.Date;
+                return t.Item2(isInFuture).Interpret(connectionString);
+            }
+
+            public T ReadReservations(Tuple<DateTimeOffset, Func<IReadOnlyCollection<Reservation>, IReservationsProgram<T>>> t)
+            {
+                var reservations = ReadReservations(
+                    t.Item1.Date,
+                    t.Item1.Date.AddDays(1).AddTicks(-1));
+                return t.Item2(reservations).Interpret(connectionString);
+            }
+
+            private IReadOnlyCollection<Reservation> ReadReservations(
+                DateTimeOffset min,
+                DateTimeOffset max)
+            {
+                var result = new List<Reservation>();
+
+                using (var conn = new SqlConnection(connectionString))
+                using (var cmd = new SqlCommand(readByRangeSql, conn))
                 {
-                    while (rdr.Read())
-                        result.Add(
-                            new Reservation
-                            {
-                                Date = (DateTimeOffset)rdr["Date"],
-                                Name = (string)rdr["Name"],
-                                Email = (string)rdr["Email"],
-                                Quantity = (int)rdr["Quantity"]
-                            });
+                    cmd.Parameters.Add(new SqlParameter("@MinDate", min));
+                    cmd.Parameters.Add(new SqlParameter("@MaxDate", max));
+
+                    conn.Open();
+                    using (var rdr = cmd.ExecuteReader())
+                    {
+                        while (rdr.Read())
+                            result.Add(
+                                new Reservation
+                                {
+                                    Date = (DateTimeOffset)rdr["Date"],
+                                    Name = (string)rdr["Name"],
+                                    Email = (string)rdr["Email"],
+                                    Quantity = (int)rdr["Quantity"]
+                                });
+                    }
+                }
+
+                return result;
+            }
+
+            private const string readByRangeSql = @"
+                SELECT [Date], [Name], [Email], [Quantity]
+                FROM [dbo].[Reservations]
+                WHERE YEAR(@MinDate) <= YEAR([Date])
+                AND MONTH(@MinDate) <= MONTH([Date])
+                AND DAY(@MinDate) <= DAY([Date])
+                AND YEAR([Date]) <= YEAR(@MaxDate)
+                AND MONTH([Date]) <= MONTH(@MaxDate)
+                AND DAY([Date]) <= DAY(@MaxDate)";
+
+            public T Create(
+                Tuple<Reservation, Func<int, IReservationsProgram<T>>> t)
+            {
+                return t.Item2(Create(t.Item1)).Interpret(connectionString);
+            }
+
+            private int Create(Reservation reservation)
+            {
+                using (var conn = new SqlConnection(connectionString))
+                using (var cmd = new SqlCommand(createReservationSql, conn))
+                {
+                    cmd.Parameters.Add(
+                        new SqlParameter("@Date", reservation.Date));
+                    cmd.Parameters.Add(
+                        new SqlParameter("@Name", reservation.Name));
+                    cmd.Parameters.Add(
+                        new SqlParameter("@Email", reservation.Email));
+                    cmd.Parameters.Add(
+                        new SqlParameter("@Quantity", reservation.Quantity));
+
+                    conn.Open();
+                    return cmd.ExecuteNonQuery();
                 }
             }
 
-            return result;
+            private const string createReservationSql = @"
+                INSERT INTO [dbo].[Reservations] ([Date], [Name], [Email], [Quantity])
+                VALUES (@Date, @Name, @Email, @Quantity)";
         }
-
-        private const string readByRangeSql = @"
-            SELECT [Date], [Name], [Email], [Quantity]
-            FROM [dbo].[Reservations]
-            WHERE YEAR(@MinDate) <= YEAR([Date])
-            AND MONTH(@MinDate) <= MONTH([Date])
-            AND DAY(@MinDate) <= DAY([Date])
-            AND YEAR([Date]) <= YEAR(@MaxDate)
-            AND MONTH([Date]) <= MONTH(@MaxDate)
-            AND DAY([Date]) <= DAY(@MaxDate)";
-
-        private static int Create(Reservation reservation, string connectionString)
-        {
-            using (var conn = new SqlConnection(connectionString))
-            using (var cmd = new SqlCommand(createReservationSql, conn))
-            {
-                cmd.Parameters.Add(
-                    new SqlParameter("@Date", reservation.Date));
-                cmd.Parameters.Add(
-                    new SqlParameter("@Name", reservation.Name));
-                cmd.Parameters.Add(
-                    new SqlParameter("@Email", reservation.Email));
-                cmd.Parameters.Add(
-                    new SqlParameter("@Quantity", reservation.Quantity));
-
-                conn.Open();
-                return cmd.ExecuteNonQuery();
-            }
-        }
-
-        private const string createReservationSql = @"
-            INSERT INTO [dbo].[Reservations] ([Date], [Name], [Email], [Quantity])
-            VALUES (@Date, @Name, @Email, @Quantity)";
     }
 }

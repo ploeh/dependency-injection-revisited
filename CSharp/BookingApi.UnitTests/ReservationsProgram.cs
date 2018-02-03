@@ -17,10 +17,45 @@ namespace Ploeh.Samples.BookingApi.UnitTests
             return program.Match(
                 pure: x => x,
                 free: i => i.Match(
-                    new ReservationsInstructionParameters<IReservationsProgram<T>, T>(
-                        isReservationInFuture: t => t.Item2(isInFuture).Interpret(isInFuture, reservations, id),
-                        readReservations: t => t.Item2(reservations).Interpret(isInFuture, reservations, id),
-                        create: t => t.Item2(id).Interpret(isInFuture, reservations, id))));
+                    new InterpretReservationsInstructionParameter<T>(
+                        isInFuture,
+                        reservations,
+                        id)));
+        }
+
+        private class InterpretReservationsInstructionParameter<T> :
+            IReservationsInstructionParameters<IReservationsProgram<T>, T>
+        {
+            private readonly bool isInFuture;
+            private readonly IReadOnlyCollection<Reservation> reservations;
+            private readonly int id;
+
+            public InterpretReservationsInstructionParameter(
+                bool isInFuture,
+                IReadOnlyCollection<Reservation> reservations,
+                int id)
+            {
+                this.isInFuture = isInFuture;
+                this.reservations = reservations;
+                this.id = id;
+            }
+
+            public T IsReservationInFuture(Tuple<Reservation, Func<bool, IReservationsProgram<T>>> t)
+            {
+                return t.Item2(isInFuture)
+                    .Interpret(isInFuture, reservations, id);
+            }
+
+            public T ReadReservations(Tuple<DateTimeOffset, Func<IReadOnlyCollection<Reservation>, IReservationsProgram<T>>> t)
+            {
+                return t.Item2(reservations)
+                    .Interpret(isInFuture, reservations, id);
+            }
+
+            public T Create(Tuple<Reservation, Func<int, IReservationsProgram<T>>> t)
+            {
+                return t.Item2(id).Interpret(isInFuture, reservations, id);
+            }
         }
     }
 }
