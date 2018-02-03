@@ -15,13 +15,13 @@ namespace Ploeh.Samples.BookingApi.Sql
         {
             return program.Match(
                 pure: x => x,
-                free: i => i.Match(
+                free: i => i.Accept(
                     new InterpretReservationsInstructionParameters<T>(
                         connectionString)));
         }
 
         private class InterpretReservationsInstructionParameters<T> :
-            IReservationsInstructionParameters<IReservationsProgram<T>, T>
+            IReservationsInstructionVisitor<IReservationsProgram<T>, T>
         {
             private readonly string connectionString;
 
@@ -31,13 +31,13 @@ namespace Ploeh.Samples.BookingApi.Sql
                 this.connectionString = connectionString;
             }
 
-            public T IsReservationInFuture(Tuple<Reservation, Func<bool, IReservationsProgram<T>>> t)
+            public T VisitIsReservationInFuture(Tuple<Reservation, Func<bool, IReservationsProgram<T>>> t)
             {
                 var isInFuture = DateTimeOffset.Now < t.Item1.Date;
                 return t.Item2(isInFuture).Interpret(connectionString);
             }
 
-            public T ReadReservations(Tuple<DateTimeOffset, Func<IReadOnlyCollection<Reservation>, IReservationsProgram<T>>> t)
+            public T VisitReadReservations(Tuple<DateTimeOffset, Func<IReadOnlyCollection<Reservation>, IReservationsProgram<T>>> t)
             {
                 var reservations = ReadReservations(
                     t.Item1.Date,
@@ -85,7 +85,7 @@ namespace Ploeh.Samples.BookingApi.Sql
                 AND MONTH([Date]) <= MONTH(@MaxDate)
                 AND DAY([Date]) <= DAY(@MaxDate)";
 
-            public T Create(
+            public T VisitCreate(
                 Tuple<Reservation, Func<int, IReservationsProgram<T>>> t)
             {
                 return t.Item2(Create(t.Item1)).Interpret(connectionString);

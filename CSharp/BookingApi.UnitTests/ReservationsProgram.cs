@@ -16,21 +16,21 @@ namespace Ploeh.Samples.BookingApi.UnitTests
         {
             return program.Match(
                 pure: x => x,
-                free: i => i.Match(
-                    new InterpretReservationsInstructionParameter<T>(
+                free: i => i.Accept(
+                    new InterpretReservationsInstructionVisitor<T>(
                         isInFuture,
                         reservations,
                         id)));
         }
 
-        private class InterpretReservationsInstructionParameter<T> :
-            IReservationsInstructionParameters<IReservationsProgram<T>, T>
+        private class InterpretReservationsInstructionVisitor<T> :
+            IReservationsInstructionVisitor<IReservationsProgram<T>, T>
         {
             private readonly bool isInFuture;
             private readonly IReadOnlyCollection<Reservation> reservations;
             private readonly int id;
 
-            public InterpretReservationsInstructionParameter(
+            public InterpretReservationsInstructionVisitor(
                 bool isInFuture,
                 IReadOnlyCollection<Reservation> reservations,
                 int id)
@@ -40,19 +40,19 @@ namespace Ploeh.Samples.BookingApi.UnitTests
                 this.id = id;
             }
 
-            public T IsReservationInFuture(Tuple<Reservation, Func<bool, IReservationsProgram<T>>> t)
+            public T VisitIsReservationInFuture(Tuple<Reservation, Func<bool, IReservationsProgram<T>>> t)
             {
                 return t.Item2(isInFuture)
                     .Interpret(isInFuture, reservations, id);
             }
 
-            public T ReadReservations(Tuple<DateTimeOffset, Func<IReadOnlyCollection<Reservation>, IReservationsProgram<T>>> t)
+            public T VisitReadReservations(Tuple<DateTimeOffset, Func<IReadOnlyCollection<Reservation>, IReservationsProgram<T>>> t)
             {
                 return t.Item2(reservations)
                     .Interpret(isInFuture, reservations, id);
             }
 
-            public T Create(Tuple<Reservation, Func<int, IReservationsProgram<T>>> t)
+            public T VisitCreate(Tuple<Reservation, Func<int, IReservationsProgram<T>>> t)
             {
                 return t.Item2(id).Interpret(isInFuture, reservations, id);
             }
