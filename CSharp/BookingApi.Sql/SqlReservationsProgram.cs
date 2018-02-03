@@ -14,10 +14,11 @@ namespace Ploeh.Samples.BookingApi.Sql
             string connectionString)
         {
             return program.Match(
-                pure: x => x,
-                free: i => i.Accept(
-                    new InterpretReservationsInstructionParameters<T>(
-                        connectionString)));
+                new ReservationsProgramParameters<T, T>(
+                    pure: x => x,
+                    free: i => i.Accept(
+                        new InterpretReservationsInstructionParameters<T>(
+                            connectionString))));
         }
 
         private class InterpretReservationsInstructionParameters<T> :

@@ -9,7 +9,6 @@ namespace Ploeh.Samples.BookingApi
     public interface IReservationsProgram<T>
     {
         TResult Match<TResult>(
-            Func<IReservationsInstruction<IReservationsProgram<T>> ,TResult> free,
-            Func<T, TResult> pure);
+            ReservationsProgramParameters<T, TResult> parameters);
     }
 }

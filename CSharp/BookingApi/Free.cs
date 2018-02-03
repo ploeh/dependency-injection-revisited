@@ -16,10 +16,9 @@ namespace Ploeh.Samples.BookingApi
         }
 
         public TResult Match<TResult>(
-            Func<IReservationsInstruction<IReservationsProgram<T>>, TResult> free,
-            Func<T, TResult> pure)
+            ReservationsProgramParameters<T, TResult> parameters)
         {
-            return free(this.i);
+            return parameters.Free(this.i);
         }
     }
 }
