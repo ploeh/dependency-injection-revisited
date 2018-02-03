@@ -16,15 +16,16 @@ namespace Ploeh.Samples.BookingApi.Sql
             return program.Match(
                 pure: x => x,
                 free: i => i.Match(
-                    isReservationInFuture: t =>
-                        t.Item2(IsReservationInFuture(t.Item1))
-                            .Interpret(connectionString),
-                    readReservations: t =>
-                        t.Item2(ReadReservations(t.Item1, connectionString))
-                            .Interpret(connectionString),
-                    create: t =>
-                        t.Item2(Create(t.Item1, connectionString))
-                            .Interpret(connectionString)));
+                    new ReservationsInstructionParameters<IReservationsProgram<T>, T>(
+                        isReservationInFuture: t =>
+                            t.Item2(IsReservationInFuture(t.Item1))
+                                .Interpret(connectionString),
+                        readReservations: t =>
+                            t.Item2(ReadReservations(t.Item1, connectionString))
+                                .Interpret(connectionString),
+                        create: t =>
+                            t.Item2(Create(t.Item1, connectionString))
+                                .Interpret(connectionString))));
         }
 
         public static bool IsReservationInFuture(Reservation reservation)

@@ -17,9 +17,10 @@ namespace Ploeh.Samples.BookingApi.UnitTests
             return program.Match(
                 pure: x => x,
                 free: i => i.Match(
-                    isReservationInFuture: t => t.Item2(isInFuture).Interpret(isInFuture, reservations, id),
-                    readReservations: t => t.Item2(reservations).Interpret(isInFuture, reservations, id),
-                    create: t => t.Item2(id).Interpret(isInFuture, reservations, id)));
+                    new ReservationsInstructionParameters<IReservationsProgram<T>, T>(
+                        isReservationInFuture: t => t.Item2(isInFuture).Interpret(isInFuture, reservations, id),
+                        readReservations: t => t.Item2(reservations).Interpret(isInFuture, reservations, id),
+                        create: t => t.Item2(id).Interpret(isInFuture, reservations, id))));
         }
     }
 }

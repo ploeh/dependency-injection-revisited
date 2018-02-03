@@ -16,11 +16,9 @@ namespace Ploeh.Samples.BookingApi
         }
 
         public TResult Match<TResult>(
-            Func<Tuple<Reservation, Func<bool, T>>, TResult> isReservationInFuture,
-            Func<Tuple<DateTimeOffset, Func<IReadOnlyCollection<Reservation>, T>>, TResult> readReservations, 
-            Func<Tuple<Reservation, Func<int, T>>, TResult> create)
+            ReservationsInstructionParameters<T, TResult> parameters)
         {
-            return create(this.t);
+            return parameters.Create(this.t);
         }
     }
 }
