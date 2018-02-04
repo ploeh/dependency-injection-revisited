@@ -57,12 +57,25 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SqlReservationsRepositoryTests.cs" />
+    <Compile Include="ConnectionStrings.cs" />
+    <Compile Include="UseDatabaseAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\xunit.analyzers.0.7.0\analyzers\dotnet\cs\xunit.analyzers.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BookingApi.Sql\BookingApi.Sql.csproj">
+      <Project>{1d24d39b-0cb0-4a46-93f6-bae9289f6859}</Project>
+      <Name>BookingApi.Sql</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\BookingApi\BookingApi.csproj">
+      <Project>{1ad71eec-b0f5-4917-a5c5-2e33abbdfb13}</Project>
+      <Name>BookingApi</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
