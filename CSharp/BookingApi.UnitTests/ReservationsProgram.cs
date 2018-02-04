@@ -15,43 +15,21 @@ namespace Ploeh.Samples.BookingApi.UnitTests
             int id)
         {
             return program.Accept(
-                new InterpretReservationsProgramVisitor<T>(
-                    new InterpretReservationsInstructionVisitor<T>(
-                        isInFuture,
-                        reservations,
-                        id)));
+                new InterpretReservationsVisitor<T>(
+                    isInFuture,
+                    reservations,
+                    id));
         }
 
-        private class InterpretReservationsProgramVisitor<T> :
-            IReservationsProgramVisitor<T, T>
-        {
-            private readonly IReservationsInstructionVisitor<IReservationsProgram<T>, T> instructionsVisitor;
-
-            public InterpretReservationsProgramVisitor(
-                IReservationsInstructionVisitor<IReservationsProgram<T>, T> instructionsVisitor)
-            {
-                this.instructionsVisitor = instructionsVisitor;
-            }
-
-            public T VisitPure(T x)
-            {
-                return x;
-            }
-
-            public T VisitFree(IReservationsInstruction<IReservationsProgram<T>> i)
-            {
-                return i.Accept(this.instructionsVisitor);
-            }
-        }
-
-        private class InterpretReservationsInstructionVisitor<T> :
+        private class InterpretReservationsVisitor<T> :
+            IReservationsProgramVisitor<T, T>,
             IReservationsInstructionVisitor<IReservationsProgram<T>, T>
         {
             private readonly bool isInFuture;
             private readonly IReadOnlyCollection<Reservation> reservations;
             private readonly int id;
 
-            public InterpretReservationsInstructionVisitor(
+            public InterpretReservationsVisitor(
                 bool isInFuture,
                 IReadOnlyCollection<Reservation> reservations,
                 int id)
@@ -61,28 +39,35 @@ namespace Ploeh.Samples.BookingApi.UnitTests
                 this.id = id;
             }
 
+            public T VisitPure(T x)
+            {
+                return x;
+            }
+
+            public T VisitFree(IReservationsInstruction<IReservationsProgram<T>> i)
+            {
+                return i.Accept(this);
+            }
+
             public T VisitIsReservationInFuture(
                 Reservation reservation,
                 Func<bool, IReservationsProgram<T>> continuation)
             {
-                return continuation(isInFuture)
-                    .Interpret(isInFuture, reservations, id);
+                return continuation(isInFuture).Accept(this);
             }
 
             public T VisitReadReservations(
                 DateTimeOffset date,
                 Func<IReadOnlyCollection<Reservation>, IReservationsProgram<T>> continuation)
             {
-                return continuation(reservations)
-                    .Interpret(isInFuture, reservations, id);
+                return continuation(reservations).Accept(this);
             }
 
             public T VisitCreate(
-                Reservation  reservation,
+                Reservation reservation,
                 Func<int, IReservationsProgram<T>> continuation)
             {
-                return continuation(id)
-                    .Interpret(isInFuture, reservations, id);
+                return continuation(id).Accept(this);
             }
         }
     }
