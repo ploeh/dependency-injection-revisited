@@ -58,7 +58,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ConnectionStrings.cs" />
-    <Compile Include="SqlReservationsProgramTests.cs" />
+    <Compile Include="SqlReservationsProgramVisitorTests.cs" />
     <Compile Include="UseDatabaseAttribute.cs" />
   </ItemGroup>
   <ItemGroup>

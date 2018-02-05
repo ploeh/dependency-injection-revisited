@@ -42,7 +42,7 @@ namespace Ploeh.Samples.BookingApi.SqlTests
 
         private Stream ReadSchema()
         {
-            return typeof(SqlReservationsProgram)
+            return typeof(SqlReservationsProgramVisitor<>)
                 .Assembly
                 .GetManifestResourceStream(
                     "Ploeh.Samples.BookingApi.Sql.BookingDbSchema.sql");
