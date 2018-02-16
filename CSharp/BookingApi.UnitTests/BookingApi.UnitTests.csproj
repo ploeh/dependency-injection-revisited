@@ -73,7 +73,7 @@
     <Compile Include="BookingApiTestConventionsAttribute.cs" />
     <Compile Include="MaîtreDTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ReservationsProgram.cs" />
+    <Compile Include="StubReservationsVisitor.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
