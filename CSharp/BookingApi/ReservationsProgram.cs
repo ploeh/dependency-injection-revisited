@@ -49,40 +49,44 @@ namespace Ploeh.Samples.BookingApi
             }
         }
 
-        public static IReservationsProgram<TResult> SelectMany<T, U, TResult>(
-            this IReservationsProgram<T> source,
-            Func<T, IReservationsProgram<U>> k,
-            Func<T, U, TResult> s)
-        {
-            return source
-                .SelectMany(x => k(x)
-                    .SelectMany(y => new Pure<TResult>(s(x, y))));
-        }
-
         // Lifts
-        public static IReservationsProgram<bool> IsReservationInFuture(Reservation reservation)
+        public static IReservationsProgram<IMaybe<bool>> IsReservationInFuture(Reservation reservation)
         {
-            return new Free<bool>(
-                new IsReservationInFuture<IReservationsProgram<bool>>(
+            return new Free<IMaybe<bool>>(
+                new IsReservationInFuture<IReservationsProgram<IMaybe<bool>>>(
                     reservation,
-                    x => new Pure<bool>(x)));
+                    x => new Pure<IMaybe<bool>>(new Just<bool>(x))));
         }
 
-        public static IReservationsProgram<IReadOnlyCollection<Reservation>> ReadReservations(
+        public static IReservationsProgram<IMaybe<IReadOnlyCollection<Reservation>>> ReadReservations(
             DateTimeOffset date)
         {
-            return new Free<IReadOnlyCollection<Reservation>>(
-                new ReadReservations<IReservationsProgram<IReadOnlyCollection<Reservation>>>(
+            return new Free<IMaybe<IReadOnlyCollection<Reservation>>>(
+                new ReadReservations<IReservationsProgram<IMaybe<IReadOnlyCollection<Reservation>>>>(
                     date,
-                    x => new Pure<IReadOnlyCollection<Reservation>>(x)));
+                    x => new Pure<IMaybe<IReadOnlyCollection<Reservation>>>(new Just<IReadOnlyCollection<Reservation>>(x))));
         }
 
-        public static IReservationsProgram<int> Create(Reservation reservation)
+        public static IReservationsProgram<IMaybe<int>> Create(Reservation reservation)
         {
-            return new Free<int>(
-                new Create<IReservationsProgram<int>>(
+            return new Free<IMaybe<int>>(
+                new Create<IReservationsProgram<IMaybe<int>>>(
                     reservation,
-                    x => new Pure<int>(x)));
+                    x => new Pure<IMaybe<int>>(new Just<int>(x))));
+        }
+
+        public static IReservationsProgram<IMaybe<Unit>> Guard(bool b)
+        {
+            if (b)
+                return new Pure<IMaybe<Unit>>(new Just<Unit>(Unit.Instance));
+            else
+                return new Pure<IMaybe<Unit>>(new Nothing<Unit>());
+        }
+
+        public static IReservationsProgram<IMaybe<Unit>> Do(Action action)
+        {
+            action();
+            return new Pure<IMaybe<Unit>>(new Just<Unit>(Unit.Instance));
         }
     }
 }

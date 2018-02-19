@@ -41,6 +41,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Free.cs" />
+    <Compile Include="IMaybe.cs" />
+    <Compile Include="IMaybeVisitor.cs" />
+    <Compile Include="Just.cs" />
+    <Compile Include="Maybe.cs" />
+    <Compile Include="Nothing.cs" />
     <Compile Include="Pure.cs" />
     <Compile Include="ReservationsInstruction.cs" />
     <Compile Include="Create.cs" />
@@ -53,8 +58,10 @@
     <Compile Include="ReadReservations.cs" />
     <Compile Include="Reservation.cs" />
     <Compile Include="IReservationsInstructionVisitor.cs" />
+    <Compile Include="ReservationsMaybe.cs" />
     <Compile Include="ReservationsProgram.cs" />
     <Compile Include="IReservationsProgramVisitor.cs" />
+    <Compile Include="Unit.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

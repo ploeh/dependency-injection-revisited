@@ -26,8 +26,8 @@ namespace Ploeh.Samples.BookingApi.UnitTests
             var actual = sut.TryAccept(reservation);
 
             Assert.Equal(
-                expected,
-                actual.Accept(new StubReservationsVisitor<int?>(true, reservations, expected)));
+                new Just<int>(expected),
+                actual.Accept(new StubReservationsVisitor<IMaybe<int>>(true, reservations, expected)));
             Assert.True(reservation.IsAccepted);
         }
 
@@ -42,8 +42,8 @@ namespace Ploeh.Samples.BookingApi.UnitTests
 
             var actual = sut.TryAccept(reservation);
 
-            Assert.Null(
-                actual.Accept(new StubReservationsVisitor<int?>(false, reservations, id)));
+            Assert.True(
+                actual.Accept(new StubReservationsVisitor<IMaybe<int>>(false, reservations, id)).IsNothing());
             Assert.False(reservation.IsAccepted);
         }
 
@@ -60,8 +60,8 @@ namespace Ploeh.Samples.BookingApi.UnitTests
 
             var actual = sut.TryAccept(reservation);
 
-            Assert.Null(
-                actual.Accept(new StubReservationsVisitor<int?>(true, reservations, id)));
+            Assert.True(
+                actual.Accept(new StubReservationsVisitor<IMaybe<int>>(true, reservations, id)).IsNothing());
             Assert.False(reservation.IsAccepted);
         }
     }

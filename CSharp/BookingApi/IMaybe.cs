@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace Ploeh.Samples.BookingApi
 {
-    public interface IMaîtreD
+    public interface IMaybe<T>
     {
-        IReservationsProgram<IMaybe<int>> TryAccept(Reservation reservation);
+        TResult Accept<TResult>(IMaybeVisitor<T, TResult> visitor);
     }
 }
