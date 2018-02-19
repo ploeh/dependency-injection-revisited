@@ -17,16 +17,17 @@ namespace Ploeh.Samples.BookingApi
 
         public IReservationsProgram<IMaybe<int>> TryAccept(Reservation reservation)
         {
-            return ReservationsProgram.IsReservationInFuture(reservation)
-                .SelectMany(isInFuture => ReservationsProgram.Guard(isInFuture))
+            return
+                from isInFuture in ReservationsProgram.IsReservationInFuture(reservation)
+                from   _ in ReservationsProgram.Guard(isInFuture)
 
-                .SelectMany((Unit _) => ReservationsProgram.ReadReservations(reservation.Date))
-                .Select(reservations => reservations.Sum(r => r.Quantity))
-                .SelectMany(reservedSeats =>
-                    ReservationsProgram.Guard(reservedSeats + reservation.Quantity <= Capacity))
+                from reservations in ReservationsProgram.ReadReservations(reservation.Date)
+                let reservedSeats = reservations.Sum(r => r.Quantity)
+                from  __ in ReservationsProgram.Guard(reservedSeats + reservation.Quantity <= Capacity)
 
-                .SelectMany((Unit _) => ReservationsProgram.Do(() => { reservation.IsAccepted = true; }))
-                .SelectMany((Unit _) => ReservationsProgram.Create(reservation));
+                from ___ in ReservationsProgram.Do(() => { reservation.IsAccepted = true; })
+                from id in ReservationsProgram.Create(reservation)
+                select id;
         }
 
         public MaîtreD WithCapacity(int newCapacity)
