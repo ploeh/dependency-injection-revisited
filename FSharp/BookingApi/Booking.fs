@@ -2,25 +2,25 @@
 
 open Ploeh.Samples.BookingApi
 open Reservations
+open ReservationsOption
 
-let isReservationInFuture r = Free (IsReservationInFuture (r, Pure))
+let isReservationInFuture r = Free (IsReservationInFuture (r, Some >> Pure))
 
-let readReservations d = Free (ReadReservations (d, Pure))
+let readReservations d = Free (ReadReservations (d, Some >> Pure))
 
-let create r = Free (Create (r, Pure))
+let create r = Free (Create (r, Some >> Pure))
+
+// bool -> ReservationsProgram<unit option>
+let guard = function
+    | true -> Pure (Some ())
+    | false -> Pure None
 
 // int -> Reservation -> ReservationsProgram<int option>
-let tryAccept capacity reservation = reservations {
-    let! isInFuture = isReservationInFuture reservation
+let tryAccept capacity reservation = reservationsOption {
+    do! ReservationsOption.bind guard <| isReservationInFuture reservation
 
-    if not isInFuture
-    then return None
-    else    
-        let! reservations = readReservations reservation.Date
-        let reservedSeats = List.sumBy (fun r -> r.Quantity) reservations
+    let! reservations = readReservations reservation.Date
+    let reservedSeats = List.sumBy (fun r -> r.Quantity) reservations
+    do! guard (reservedSeats + reservation.Quantity <= capacity)
 
-        if (capacity < reservedSeats + reservation.Quantity)
-        then return None
-        else
-            let! reservationId = create { reservation with IsAccepted = true }
-            return Some reservationId }
+    return! create { reservation with IsAccepted = true } }
