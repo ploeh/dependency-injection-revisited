@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Reservations.fs" />
+    <Compile Include="ReservationsOption.fs" />
     <Compile Include="Booking.fs" />
     <Content Include="packages.config" />
   </ItemGroup>

@@ -26,17 +26,17 @@ namespace Ploeh.Samples.BookingApi.SqlTests
                 Quantity = 2
             };
             var p = maîtreD.TryAccept(reservation);
-            var id = p.Accept(new SqlReservationsProgramVisitor<int?>(connectionString));
+            var id = p.Accept(new SqlReservationsProgramVisitor<IMaybe<int>>(connectionString));
 
-            Assert.NotNull(id);
-            Assert.NotEqual(default(int), id);
+            Assert.True(id.IsJust());
+            Assert.NotEqual(default(int), id.GetValueOrDefault(default(int)));
         }
 
         [Fact]
         public void IsReservationInFutureReturnsTrue()
         {
             var now = DateTimeOffset.Now;
-            var sut = new SqlReservationsProgramVisitor<bool>(
+            var sut = new SqlReservationsProgramVisitor<IMaybe<bool>>(
                 ConnectionStrings.Reservations);
 
             var reservation = new Reservation
@@ -49,14 +49,14 @@ namespace Ploeh.Samples.BookingApi.SqlTests
             var p = ReservationsProgram.IsReservationInFuture(reservation);
             var actual = p.Accept(sut);
 
-            Assert.True(actual);
+            Assert.True(actual.GetValueOrDefault(false));
         }
 
         [Fact]
         public void IsReservationInFutureReturnsFalse()
         {
             var now = DateTimeOffset.Now;
-            var sut = new SqlReservationsProgramVisitor<bool>(
+            var sut = new SqlReservationsProgramVisitor<IMaybe<bool>>(
                 ConnectionStrings.Reservations);
 
             var reservation = new Reservation
@@ -69,7 +69,7 @@ namespace Ploeh.Samples.BookingApi.SqlTests
             var p = ReservationsProgram.IsReservationInFuture(reservation);
             var actual = p.Accept(sut);
 
-            Assert.False(actual);
+            Assert.False(actual.GetValueOrDefault(true));
         }
 
         [Fact]
@@ -84,7 +84,7 @@ namespace Ploeh.Samples.BookingApi.SqlTests
                 conn.Open();
                 cmd.ExecuteNonQuery();
             }
-            var sut = new SqlReservationsProgramVisitor<IReadOnlyCollection<Reservation>>(
+            var sut = new SqlReservationsProgramVisitor<IMaybe<IReadOnlyCollection<Reservation>>>(
                 ConnectionStrings.Reservations);
 
             var p = ReservationsProgram.ReadReservations(
@@ -92,17 +92,17 @@ namespace Ploeh.Samples.BookingApi.SqlTests
                     new DateTime(2018, 2, 5),
                     TimeSpan.FromHours(1)));
             var actual = p.Accept(sut);
-
-            Assert.Equal(1, actual.Count);
-            Assert.Equal("Ploeh Fnaah", actual.First().Name);
-            Assert.Equal("ploeh@example.org", actual.First().Email);
-            Assert.Equal(3, actual.First().Quantity);
+            
+            Assert.Equal(new Just<int>(1), actual.Select(r => r.Count));
+            Assert.Equal(new Just<string>("Ploeh Fnaah"), actual.Select(r => r.First().Name));
+            Assert.Equal(new Just<string>("ploeh@example.org"), actual.Select(r => r.First().Email));
+            Assert.Equal(new Just<int>(3), actual.Select(r => r.First().Quantity));
         }
 
         [Fact]
         public void CreateAddsRowToDatabase()
         {
-            var sut = new SqlReservationsProgramVisitor<int>(
+            var sut = new SqlReservationsProgramVisitor<IMaybe<int>>(
                 ConnectionStrings.Reservations);
 
             var p = ReservationsProgram.Create(
@@ -129,7 +129,7 @@ namespace Ploeh.Samples.BookingApi.SqlTests
                     Assert.Equal("foo@example.com", rdr["Email"]);
                     Assert.Equal("Foo Bar", rdr["Name"]);
                     Assert.Equal(4, rdr["Quantity"]);
-                    Assert.Equal(actual, rdr["Id"]);
+                    Assert.Equal(actual, new Just<int>((int)rdr["Id"]));
                 }
             }
         }
